@@ -1,0 +1,49 @@
+#!/bin/sh
+
+function usage()
+{
+    echo "bip package"
+    exit 1
+}
+
+if [ `whoami` != "root" ]; then
+    echo "You must be root to run this script."
+    exit 1
+fi
+
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+PACKAGEFILE=$1
+
+if [ ! -f "$PACKAGEFILE" ]; then
+    echo "No such package $PACKAGEFILE"
+    exit 1
+fi
+
+PACKAGE=`echo $PACKAGEFILE | cut -d. -f1`
+
+echo "Unpacking $PACKAGE..."
+
+P=`pwd`
+ME=$$
+mkdir t$ME
+cp "$PACKAGEFILE" t$ME
+cd t$ME
+tar zxf "$PACKAGEFILE"
+
+cd "$PACKAGE".PACKAGE
+
+echo "Running install..."
+if [ -f install.sh ]; then
+    sh ./install.sh
+elif [ -f war-install.sh ]; then
+    sh ./war-install.sh
+else
+    echo "No installation files (install.sh or war-install.sh) to execute."
+fi
+
+echo "Cleaning up..."
+cd $P
+rm -rf t$ME

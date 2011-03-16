@@ -1,28 +1,109 @@
 #!/bin/sh
 
+UMMS_URL=https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources
+MVN_BUILD="package1"
+HOST="localhost"
+
+if [ -z "$NCIBI_USER" ]; then
+    NCIBI_USER=`whoami`
+fi
+
 function usage()
 {
-    echo "npt {production|test|local}"
+    echo "bap {production|test}"
     exit 0
+}
+
+function retrieve()
+{
+    #echo "wget --no-check-certificate --user=$NCIBI_USER --password=\"$SVNPASSWORD\" $UMMS_URL/$1"
+    wget --no-check-certificate --user=$NCIBI_USER --password="$SVNPASSWORD" $UMMS_URL/$1 > /dev/null 2>&1
+}
+
+function loadPropertiesFile()
+{
+    retrieve $PACKAGE_TYPE/$PACKAGE/$PROPERTIES_FILE 
+    mv $PROPERTIES_FILE src/main/resources
+}
+
+function gatherFilesForPackage()
+{
+    retrieve $PACKAGE_TYPE/$PACKAGE/files
+    cat files | while read file
+    do
+        if [ ${file:0:6} = "CONFIG" ]; then
+            DOWNLOADFILE=`echo $file | cut -d: -f2`
+            retrieve $PACKAGE_TYPE/$DOWNLOADFILE
+            mv $DOWNLOADFILE ../$PACKAGEDIR
+        else
+            if [ -f "$file" ]; then
+                cp "$file" ../$PACKAGEDIR
+            else
+                echo "Invalid file: $file specified for packaging, skipping..."
+            fi
+        fi
+    done
+    rm -f files
+}
+
+function determineMvnBuild()
+{
+    while read configEntry
+    do
+        if [ ${configEntry:0:9} = "MVN_BUILD" ]; then
+            MVN_BUILD=`echo $configEntry | cut -d: -f2`
+        fi
+    done < config
+    echo $MVN_BUILD
+}
+
+function determineHost()
+{
+    while read configEntry
+    do
+        if [ ${configEntry:0:4} = "HOST" ]; then
+            HOST=`echo $configEntry | cut -d: -f2`
+        fi
+    done < config
+    echo $HOST
+}
+#rm -f config
+
+function determineUser()
+{
+    if [ -z "$NCIBI_USER" ]; then
+        NCIBI_USER=`whoami`
+        echo "User?[$NCIBI_USER]"
+        read
+        if [ ! -z "$REPLY" ]; then
+            NCIBI_USER=$REPLY
+        fi
+    fi
+
+    echo $NCIBI_USER
 }
 
 if [ $# -ne 1 ]; then
     usage
 fi
 
-if [ -z "$NCIBI_USER" ]; then
-    NCIBI_USER=`whoami`
-fi
-
 PACKAGE_TYPE="$1"
 
-if [ "$PACKAGE_TYPE" != "production" -o "$PACKAGE_TYPE" != "test" -o "$PACKAGE_TYPE" != "local" ]; then
+if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" -a "$PACKAGE_TYPE" != "local" ]; then
     usage
 fi
 
-PACKAGE=`basename `pwd``
+rm -rf save
 
-if [ ! -f src/main/resource/project.config ]; then
+NCIBI_USER=$(determineUser)
+
+PACKAGE=`basename ${PWD}`
+PACKAGEDIR="$PACKAGE".PACKAGE
+
+rm -rf ../$PACKAGEDIR
+rm -f ../$PACKAGE.tar.gz
+
+if [ ! -f src/main/resources/project.config ]; then
     echo "Invalid: No project.config found."
     exit 1
 fi
@@ -34,21 +115,34 @@ if [ -f src/main/resources/$PROPERTIES_FILE ]; then
     mv src/main/resources/$PROPERTIES_FILE save
 fi
 
-echo "Downloading configuration files for project - you will be asked for your password to retrieve configuration files"
-wget --no-check-certificate  --user=$NCIBI_USER --ask-password https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources/$PROPERTIES_FILE.$PACKAGE_TYPE
+mkdir ../$PACKAGEDIR
 
-mv $PROPERTIES_FILE.$PACKAGE_TYPE src/main/resources/$PROPERTIES_FILE
-mvn -Dmaven.test.skip=true assembly:assembly
+echo "Downloading configuration files for project."
+echo -n "UMMS SVN server password:"
+read -s
+SVNPASSWORD="$REPLY"
+echo ""
+loadPropertiesFile
 
-mkdir ../$PACKAGE
-if [ -f src/main/scripts ]; then
-    cp src/main/scripts/* ../$PACKAGE
-fi
+echo "Gathering files for package..."
+gatherFilesForPackage
 
+echo "Determining configuration for building, packaging, and transfering..."
+retrieve $PACKAGE_TYPE/$PACKAGE/config
+HOST=$(determineHost)
+MVN_BUILD=$(determineMvnBuild)
+
+rm -f config
+
+echo "Running build..."
+mvn -Dmaven.test.skip=true $MVN_BUILD > /dev/null 2>&1
+
+echo "Creating package..."
 cd ..
-tar czf $PACKAGE.tar.gz $PACKAGE
-rm -rf $PACKAGE
+tar czf $PACKAGE.tar.gz $PACKAGEDIR
+rm -rf $PACKAGEDIR
 
+echo "Cleaning up..."
 cd -
 if [ -f save/$PROPERTIES_FILE ]; then
     mv save/$PROPERTIES_FILE src/main/resources
@@ -57,8 +151,9 @@ fi
 rm -rf save
 cd ..
 
-echo "Transfering package"
-sftp $NCIBI_USER@ncibi-mimitest.bicc.med.umich.edu << __FTP_COMMANDS__
+echo "Transfering package..."
+
+sftp $NCIBI_USER@$HOST << __FTP_COMMANDS__
 put $PACKAGE.tar.gz
 __FTP_COMMANDS__
 
