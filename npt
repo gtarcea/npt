@@ -1,0 +1,65 @@
+#!/bin/sh
+
+function usage()
+{
+    echo "npt {production|test|local}"
+    exit 0
+}
+
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+if [ -z "$NCIBI_USER" ]; then
+    NCIBI_USER=`whoami`
+fi
+
+PACKAGE_TYPE="$1"
+
+if [ "$PACKAGE_TYPE" != "production" -o "$PACKAGE_TYPE" != "test" -o "$PACKAGE_TYPE" != "local" ]; then
+    usage
+fi
+
+PACKAGE=`basename `pwd``
+
+if [ ! -f src/main/resource/project.config ]; then
+    echo "Invalid: No project.config found."
+    exit 1
+fi
+
+PROPERTIES_FILE=`cat src/main/resources/project.config | grep project.name | cut -d'=' -f2`.properties
+
+mkdir save
+if [ -f src/main/resources/$PROPERTIES_FILE ]; then
+    mv src/main/resources/$PROPERTIES_FILE save
+fi
+
+echo "Downloading configuration files for project - you will be asked for your password to retrieve configuration files"
+wget --no-check-certificate  --user=$NCIBI_USER --ask-password https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources/$PROPERTIES_FILE.$PACKAGE_TYPE
+
+mv $PROPERTIES_FILE.$PACKAGE_TYPE src/main/resources/$PROPERTIES_FILE
+mvn -Dmaven.test.skip=true assembly:assembly
+
+mkdir ../$PACKAGE
+if [ -f src/main/scripts ]; then
+    cp src/main/scripts/* ../$PACKAGE
+fi
+
+cd ..
+tar czf $PACKAGE.tar.gz $PACKAGE
+rm -rf $PACKAGE
+
+cd -
+if [ -f save/$PROPERTIES_FILE ]; then
+    mv save/$PROPERTIES_FILE src/main/resources
+fi
+
+rm -rf save
+cd ..
+
+echo "Transfering package"
+sftp $NCIBI_USER@ncibi-mimitest.bicc.med.umich.edu << __FTP_COMMANDS__
+put $PACKAGE.tar.gz
+__FTP_COMMANDS__
+
+rm -f $PACKAGE.tar.gz
