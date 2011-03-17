@@ -36,7 +36,9 @@ function gatherFilesForPackage()
             retrieve $PACKAGE_TYPE/$DOWNLOADFILE
             mv $DOWNLOADFILE ../$PACKAGEDIR
         else
-            if [ -f "$file" ]; then
+            if [ -d "$file" ]; then
+                cp -r "$file" ../$PACKAGEDIR
+            elif [ -f "$file" ]; then
                 cp "$file" ../$PACKAGEDIR
             else
                 echo "Invalid file: $file specified for packaging, skipping..."
