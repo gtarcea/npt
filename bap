@@ -153,6 +153,10 @@ fi
 rm -rf save
 cd ..
 
+if [ ! -z "$LOCAL_TEST" ]; then
+    exit 0
+fi
+
 echo "Transfering package..."
 
 sftp $NCIBI_USER@$HOST << __FTP_COMMANDS__
