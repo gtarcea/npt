@@ -31,10 +31,18 @@ function gatherFilesForPackage()
     retrieve $PACKAGE_TYPE/$PACKAGE/files
     cat files | while read file
     do
-        if [ ${file:0:6} = "CONFIG" ]; then
+        if [ ${file:0:6} = "SERVER" ]; then
             DOWNLOADFILE=`echo $file | cut -d: -f2`
-            retrieve $PACKAGE_TYPE/$DOWNLOADFILE
+            retrieve scripts/$DOWNLOADFILE
             mv $DOWNLOADFILE ../$PACKAGEDIR
+        elif [ ${file:0:7} = "SRENAME" ]; then
+            #
+            # Download and rename
+            #
+            F=`echo $file | cut -d: -f2`
+            R=`echo $file | cut -d: -f3`
+            retrieve scripts/$F
+            mv $F ../$PACKAGEDIR/$R
         else
             if [ -d "$file" ]; then
                 cp -r "$file" ../$PACKAGEDIR
@@ -89,9 +97,10 @@ if [ $# -ne 1 ]; then
     usage
 fi
 
-PACKAGE_TYPE="$1"
+PACKAGE_TYPE=`echo $1 | cut -d: -f1`
+PACKAGE_OPTION=`echo $1 | cut -d: -f2`
 
-if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" -a "$PACKAGE_TYPE" != "local" ]; then
+if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" ]; then
     usage
 fi
 
@@ -145,7 +154,7 @@ tar czf $PACKAGE.tar.gz $PACKAGEDIR
 rm -rf $PACKAGEDIR
 
 echo "Cleaning up..."
-cd -
+cd - > /dev/null
 if [ -f save/$PROPERTIES_FILE ]; then
     mv save/$PROPERTIES_FILE src/main/resources
 fi
@@ -153,7 +162,7 @@ fi
 rm -rf save
 cd ..
 
-if [ ! -z "$LOCAL_TEST" ]; then
+if [ "$PACKAGE_OPTION"  = "local" ]; then
     exit 0
 fi
 
