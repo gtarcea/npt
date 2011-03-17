@@ -10,7 +10,7 @@ fi
 
 function usage()
 {
-    echo "bap {production|test}"
+    echo "bap {production|test} [project]"
     exit 0
 }
 
@@ -93,7 +93,7 @@ function determineUser()
     echo $NCIBI_USER
 }
 
-if [ $# -ne 1 ]; then
+if [ $# -gt 2 -o $# -lt 1 ]; then
     usage
 fi
 
@@ -108,7 +108,12 @@ rm -rf save
 
 NCIBI_USER=$(determineUser)
 
-PACKAGE=`basename ${PWD}`
+if [ $# -eq 2 ]; then
+    PACKAGE=$2
+else
+    PACKAGE=`basename ${PWD}`
+fi
+
 PACKAGEDIR="$PACKAGE".PACKAGE
 
 rm -rf ../$PACKAGEDIR
