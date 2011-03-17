@@ -1,7 +1,7 @@
 #!/bin/sh
 
 UMMS_URL=https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources
-MVN_BUILD="package1"
+MVN_BUILD="package"
 HOST="localhost"
 
 if [ -z "$NCIBI_USER" ]; then
@@ -51,7 +51,7 @@ function determineMvnBuild()
     while read configEntry
     do
         if [ ${configEntry:0:9} = "MVN_BUILD" ]; then
-            MVN_BUILD=`echo $configEntry | cut -d: -f2`
+            MVN_BUILD=`echo $configEntry | cut -d: -f2-`
         fi
     done < config
     echo $MVN_BUILD
