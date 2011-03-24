@@ -100,7 +100,7 @@ fi
 PACKAGE_TYPE=`echo $1 | cut -d: -f1`
 PACKAGE_OPTION=`echo $1 | cut -d: -f2`
 
-if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" ]; then
+if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" -a "$PACKAGE_TYPE" != "tcbeta" ]; then
     usage
 fi
 
