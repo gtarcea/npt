@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 UMMS_URL=https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources
 MVN_BUILD="package"
@@ -140,9 +140,6 @@ SVNPASSWORD="$REPLY"
 echo ""
 loadPropertiesFile
 
-echo "Gathering files for package..."
-gatherFilesForPackage
-
 echo "Determining configuration for building, packaging, and transfering..."
 retrieve $PACKAGE_TYPE/$PACKAGE/config
 HOST=$(determineHost)
@@ -152,6 +149,9 @@ rm -f config
 
 echo "Running build..."
 mvn -Dmaven.test.skip=true $MVN_BUILD > /dev/null 2>&1
+
+echo "Gathering files for package..."
+gatherFilesForPackage
 
 echo "Creating package..."
 cd ..
