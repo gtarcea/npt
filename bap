@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 UMMS_URL=https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources
 MVN_BUILD="package"
