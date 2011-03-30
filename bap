@@ -87,7 +87,7 @@ function determineUser()
 {
     if [ -z "$NCIBI_USER" ]; then
         NCIBI_USER=`whoami`
-        echo "User?[$NCIBI_USER]"
+        /bin/echo -n "User?[$NCIBI_USER]"
         read
         if [ ! -z "$REPLY" ]; then
             NCIBI_USER=$REPLY
