@@ -142,7 +142,7 @@ fi
 mkdir ../$PACKAGEDIR
 
 echo "Downloading configuration files for project."
-echo -n "UMMS SVN server password:"
+/bin/echo -n "UMMS SVN server password:"
 read -s
 SVNPASSWORD="$REPLY"
 echo ""
