@@ -97,6 +97,18 @@ function determineUser()
     echo $NCIBI_USER
 }
 
+function knownPackage()
+{
+    FOUND=false
+    for package in "production" "test" "tcbeta" "local"
+    do
+        if [ "$1" = "$package" ]; then
+            FOUND=true
+        fi
+    done
+    echo $FOUND
+}
+
 if [ $# -gt 2 -o $# -lt 1 ]; then
     usage
 fi
@@ -108,7 +120,9 @@ if [ "$PACKAGE_TYPE" = "local" ]; then
     PACKAGE_OPTION="local"
 fi
 
-if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" -a "$PACKAGE_TYPE" != "tcbeta" "$PACKAGE_TYPE" != "local" ]; then
+KNOWN=$(knownPackage "$PACKAGE_TYPE")
+
+if [ "$KNOWN" = "false" ]; then
     usage
 fi
 
