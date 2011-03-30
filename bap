@@ -22,8 +22,12 @@ function retrieve()
 
 function loadPropertiesFile()
 {
-    retrieve $PACKAGE_TYPE/$PACKAGE/$PROPERTIES_FILE 
-    mv $PROPERTIES_FILE src/main/resources
+    if [ "$PACKAGE_TYPE" = "local" ]; then
+        cp save/$PROPERTIES_FILE src/main/resources
+    else
+        retrieve $PACKAGE_TYPE/$PACKAGE/$PROPERTIES_FILE 
+        mv $PROPERTIES_FILE src/main/resources
+    fi
 }
 
 function gatherFilesForPackage()
@@ -98,9 +102,13 @@ if [ $# -gt 2 -o $# -lt 1 ]; then
 fi
 
 PACKAGE_TYPE=`echo $1 | cut -d: -f1`
-PACKAGE_OPTION=`echo $1 | cut -d: -f2`
+PACKAGE_OPTION=`echo $1 | cut -d: -f2 -s`
 
-if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" -a "$PACKAGE_TYPE" != "tcbeta" ]; then
+if [ "$PACKAGE_TYPE" = "local" ]; then
+    PACKAGE_OPTION="local"
+fi
+
+if [ "$PACKAGE_TYPE" != "production" -a "$PACKAGE_TYPE" != "test" -a "$PACKAGE_TYPE" != "tcbeta" "$PACKAGE_TYPE" != "local" ]; then
     usage
 fi
 
