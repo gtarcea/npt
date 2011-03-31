@@ -156,10 +156,13 @@ fi
 mkdir ../$PACKAGEDIR
 
 echo "Downloading configuration files for project."
-/bin/echo -n "UMMS SVN server password:"
-read -s
-SVNPASSWORD="$REPLY"
-echo ""
+
+if [ -z "$SVNPASSWORD" ]; then
+    /bin/echo -n "UMMS SVN server password:"
+    read -s
+    SVNPASSWORD="$REPLY"
+    echo ""
+fi
 loadPropertiesFile
 
 echo "Determining configuration for building, packaging, and transfering..."
