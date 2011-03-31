@@ -10,7 +10,7 @@ fi
 
 function usage()
 {
-    echo "bap {production|test} [project]"
+    echo "build {production|test|tcbeta|local}[:local] [project]"
     exit 0
 }
 
