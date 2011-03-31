@@ -2,7 +2,7 @@
 
 function usage()
 {
-    echo "deploy package.tar.gz"
+    echo "pdeploy package.tar.gz"
     exit 1
 }
 
