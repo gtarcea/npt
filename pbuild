@@ -10,7 +10,7 @@ fi
 
 function usage()
 {
-    echo "pbuild {production|test|tcbeta|local}[:local] [project]"
+    echo "pbuild {production|test|tcbeta|local|web01}[:local] [project]"
     exit 0
 }
 
@@ -100,7 +100,7 @@ function determineUser()
 function knownPackage()
 {
     FOUND=false
-    for package in "production" "test" "tcbeta" "local"
+    for package in "production" "test" "tcbeta" "local" "web01"
     do
         if [ "$1" = "$package" ]; then
             FOUND=true
