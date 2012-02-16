@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 UMMS_URL=https://www.umms.med.umich.edu/codestore/ncibi/projects/config/trunk/src/main/resources
 MVN_BUILD="package"
@@ -100,7 +100,7 @@ function determineUser()
 function knownPackage()
 {
     FOUND=false
-    for package in "production" "test" "tcbeta" "local" "web01"
+    for package in "production" "test" "tcbeta" "local" "web01" "tikal"
     do
         if [ "$1" = "$package" ]; then
             FOUND=true
