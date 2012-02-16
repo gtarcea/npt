@@ -173,6 +173,7 @@ MVN_BUILD=$(determineMvnBuild)
 rm -f config
 
 echo "Running build..."
+mvn clean > /dev/null 2>&1
 mvn -Dmaven.test.skip=true $MVN_BUILD > /dev/null 2>&1
 
 echo "Gathering files for package..."
