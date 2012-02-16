@@ -37,9 +37,9 @@ cd "$PACKAGE".PACKAGE
 
 echo "Running install..."
 if [ -f install.sh ]; then
-    sh ./install.sh
+    bash ./install.sh
 elif [ -f war-install.sh ]; then
-    sh ./war-install.sh
+    bash ./war-install.sh
 else
     echo "No installation files (install.sh or war-install.sh) to execute."
 fi
